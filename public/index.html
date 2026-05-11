@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Merchant Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      :root { color-scheme: light dark; }
+      body { font-family: system-ui, sans-serif; max-width: 960px; margin: 2rem auto; padding: 0 1rem; }
+      h1 { margin-bottom: 0.25rem; }
+      .merchant-picker { margin-bottom: 1rem; }
+      .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin: 1rem 0; }
+      .card { border: 1px solid #ccc4; border-radius: 8px; padding: 1rem; }
+      .card .label { font-size: 0.85rem; opacity: 0.7; }
+      .card .value { font-size: 1.6rem; font-weight: 600; margin-top: 0.25rem; }
+      table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+      th, td { text-align: left; padding: 0.5rem; border-bottom: 1px solid #ccc4; }
+      th { font-weight: 600; opacity: 0.8; }
+      .muted { opacity: 0.6; }
+    </style>
+  </head>
+  <body>
+    <h1>Merchant Dashboard</h1>
+    <p class="muted">Tiny demo dashboard backed by the local API.</p>
+
+    <div class="merchant-picker">
+      <label>Logged in as:
+        <select id="merchant-select">
+          <option value="m_acme">Acme Supplies</option>
+          <option value="m_bistro">Bistro Verde</option>
+        </select>
+      </label>
+    </div>
+
+    <section>
+      <h2>Summary</h2>
+      <div class="cards" id="summary-cards">
+        <div class="card"><div class="label">Total orders</div><div class="value" id="total-orders">—</div></div>
+        <div class="card"><div class="label">Unique customers</div><div class="value" id="unique-customers">—</div></div>
+        <div class="card"><div class="label">Avg order value</div><div class="value" id="avg-order">—</div></div>
+        <div class="card"><div class="label">Revenue (last 30 days)</div><div class="value" id="revenue-30d">—</div></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Recent orders</h2>
+      <table>
+        <thead>
+          <tr><th>Date</th><th>Customer</th><th>Type</th><th>Amount</th></tr>
+        </thead>
+        <tbody id="orders-tbody"></tbody>
+      </table>
+    </section>
+
+    <script src="/app.js"></script>
+  </body>
+</html>
