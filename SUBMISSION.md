@@ -16,7 +16,7 @@ If your fork is private, share it with the GitHub user named in the recruiter's 
 
 Place this file at the root of your fork. **One page maximum.** Cover:
 
-- **Which bugs you fixed**, and one sentence each on why those fixes were the right shape (vs. simpler patches that you considered and rejected).
+- **Which issues you addressed**, and one sentence each on why your improvement was the right shape (vs. simpler patches or larger refactors you considered and rejected).
 - **Which feature you chose**, and why this one and not the other two.
 - **Anything you noticed but did NOT fix**, and why (scope, time budget, "this needs a larger conversation").
 - **Anything in the existing docs or code you intentionally left alone**, even if it looked off — and why.

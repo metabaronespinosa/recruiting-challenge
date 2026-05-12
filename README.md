@@ -10,7 +10,7 @@ We care less about *whether* you finish than *how* you decide what to do. Read [
 
 1. **Fork** this repo to your own GitHub account. Make your fork public.
 2. **Set up the app locally** (instructions below). Run it. Click around the dashboard.
-3. **Find and fix at least 3 bugs.** There are at least three real problems in this codebase. Some are easy to spot, some take more reading. We don't tell you in advance which ones — finding them is part of the exercise.
+3. **Identify and address at least 3 quality issues.** Treat this codebase the way you'd treat a real production system that just landed on your desk: things that work but shouldn't, things that are missing, things whose shape could be better, things that won't scale, things that aren't safe. Some are easy to spot, some take more reading. We don't tell you in advance which ones — surfacing them is part of the exercise. **The entire codebase, docs, and API surface are fair game.** You decide what's worth improving and why.
 4. **Pick one feature from the menu below and add it.** You choose. Tell us why you chose it.
 5. **Improve the documentation** as you go. The `docs/` directory is out of date and incomplete; treat it as part of the codebase.
 6. **Submit** the four artifacts described in [`SUBMISSION.md`](./SUBMISSION.md).
@@ -93,5 +93,5 @@ Don't ask us. Make a decision, document it, and move on. We'd rather see you cal
 
 ## Found this repo without a recruiter contact?
 
-If you reached this repo organically and want to use it as an entry point into T1 engineering, send your submission and a short note about how you found us to **<reclutamiento@t1.com>** (or the address listed on the T1 careers page). We do hire from cold submissions.
+If you reached this repo organically and want to use it as an entry point into T1 engineering, send your submission and a short note about how you found us to **<recruiting@t1.com>** (or the address listed on the T1 careers page). We do hire from cold submissions.
 
