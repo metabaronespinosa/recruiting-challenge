@@ -1,7 +1,7 @@
 import express from 'express';
 import { initSchema } from './db.js';
 import { authMiddleware } from './auth.js';
-import { ordersDal } from './dal/orders-dal.js';
+import { orderSqliteRepo } from './infrastructure/sqlite/order.sqlite.repo.js';
 import { createOrderService } from './domain/order/order.service.js';
 import { createOrdersRouter } from './routes/orders.js';
 import { createRevenueRouter } from './routes/revenue.js';
@@ -16,7 +16,7 @@ const app = express();
 const { port } = config;
 
 // Wire the service once at application startup and inject into every router.
-const orderService = createOrderService(ordersDal);
+const orderService = createOrderService(orderSqliteRepo);
 
 app.use(express.json());
 app.use(express.static('public'));

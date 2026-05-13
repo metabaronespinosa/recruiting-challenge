@@ -6,8 +6,8 @@
  * @deprecated Prefer createRevenueRouter(orderService) for testability.
  */
 
-import { ordersDal } from '../dal/orders-dal.js';
+import { orderSqliteRepo } from '../infrastructure/sqlite/order.sqlite.repo.js';
 import { createOrderService } from '../domain/order/order.service.js';
 import { createRevenueRouter } from './revenue.js';
 
-export const revenueRouter = createRevenueRouter(createOrderService(ordersDal));
+export const revenueRouter = createRevenueRouter(createOrderService(orderSqliteRepo));

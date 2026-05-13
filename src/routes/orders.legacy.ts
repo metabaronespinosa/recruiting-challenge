@@ -9,8 +9,8 @@
  * @deprecated Prefer createOrdersRouter(orderService) for testability.
  */
 
-import { ordersDal } from '../dal/orders-dal.js';
+import { orderSqliteRepo } from '../infrastructure/sqlite/order.sqlite.repo.js';
 import { createOrderService } from '../domain/order/order.service.js';
 import { createOrdersRouter } from './orders.js';
 
-export const ordersRouter = createOrdersRouter(createOrderService(ordersDal));
+export const ordersRouter = createOrdersRouter(createOrderService(orderSqliteRepo));
