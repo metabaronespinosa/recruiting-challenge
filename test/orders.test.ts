@@ -23,7 +23,7 @@ test('orders DAL: create + listByMerchant returns the order', () => {
   assert.equal(list[0]!.total_amount, 5000);
 });
 
-test('orders DAL: getById returns the order', () => {
+test('orders DAL: getById returns the order for the correct merchant', () => {
   initSchema();
   db.prepare(`INSERT OR IGNORE INTO merchants (id, name) VALUES ('m_test', 'Test')`).run();
   ordersDal.create({
@@ -34,6 +34,26 @@ test('orders DAL: getById returns the order', () => {
     type: 'sale',
     status: 'completed',
   });
-  const got = ordersDal.getById('o2');
+  const got = ordersDal.getById('o2', 'm_test');
   assert.equal(got?.total_amount, 1200);
+});
+
+test('C-1: getById returns undefined when merchantId does not match (IDOR fix)', () => {
+  initSchema();
+  db.prepare(`INSERT OR IGNORE INTO merchants (id, name) VALUES ('m_test', 'Test')`).run();
+  db.prepare(`INSERT OR IGNORE INTO merchants (id, name) VALUES ('m_other', 'Other')`).run();
+  ordersDal.create({
+    id: 'o3',
+    merchant_id: 'm_test',
+    customer_email: 'x@y.com',
+    total_amount: 9999,
+    type: 'sale',
+    status: 'completed',
+  });
+  // A different merchant must NOT be able to fetch this order
+  const stolen = ordersDal.getById('o3', 'm_other');
+  assert.equal(stolen, undefined);
+  // The owning merchant CAN fetch it
+  const owned = ordersDal.getById('o3', 'm_test');
+  assert.equal(owned?.total_amount, 9999);
 });
