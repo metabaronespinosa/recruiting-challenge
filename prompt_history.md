@@ -167,3 +167,25 @@ Created `.continue/rules/update-decision-log.md` with instructions to append one
 Accepted as-is.
 
 ---
+
+## Session 7 — Steps 2–5 of the DDD migration plan
+
+**Prompt:**
+```
+In this session we are going through the steps #2 to #5 of the /docs/AUDIT.md migration plan.
+These are the considerations you need to take into account for every update:
+- Generate a commit for every single update
+- Validate tests in /test/*/*test.ts pass every time and add new tests if apply for current changes
+- Make sure the API has a strong scalable design, if you detect there is better design for a certain endpoint, create a new version with expressjs routes so no breaking changes are introduced for users of previous versions
+Additional notes:
+- Be concise with testing coverage, no need to cover every single edge case for now.
+- Don't forget to apply continue.dev rules for each update
+```
+
+**What the model returned:**
+Executed four sequential commits covering Steps 2–5 of the migration plan, each gated on a full passing test run. Step 2: created `src/lib/errors.ts` with `AppError`, `NotFoundError`, `ValidationError`, and `AuthError`; updated the global error handler in `server.ts` to pattern-match on `AppError` instead of catching a generic `Error`; added `test/errors.test.ts` (4 tests). Step 3: created `src/config.ts` centralising `DB_PATH` and `PORT` reads; updated `db.ts` and `server.ts` to import from it; added `test/config.test.ts` (3 tests). Step 4: confirmed the single DB seam was already clean from Step 1 (H-1); added `test/metrics.test.ts` with 6 DAL unit tests and 4 route integration tests for `getMetricsSummary` and `getTopCustomers`. Step 5: created `src/domain/order/order.types.ts` with `OrderRow`, `OrderType`, `CreateOrderInput`, `OrderFilters`, `MetricsSummary`, and `TopCustomerRow`; updated `orders-dal.ts` to import from the types file and re-export for backwards compatibility; added `test/order-types.test.ts` (4 tests). Final state: 54/54 tests passing across 8 test files.
+
+**What I accepted, rejected, or refined:**
+Accepted all changes as-is. No new API versions were needed since none of the structural changes altered existing endpoint contracts. The backwards-compatible re-export pattern in `orders-dal.ts` was a deliberate design choice to avoid breaking any existing importers during the incremental migration.
+
+---

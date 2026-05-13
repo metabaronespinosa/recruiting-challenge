@@ -39,24 +39,43 @@
   - Shape of my improvement: Extracted `isValidDate` (YYYY-MM-DD regex) and `clampLimit` (hard max 500) into `src/routes/query-validation.ts`; applied to orders and revenue routes with explicit 400s for bad input.
   - Alternatives I considered and rejected: Inline checks per route — rejected to avoid duplication; a shared module keeps the logic testable and reusable.
 
+- **Step 2 — Typed AppError hierarchy**
+  - What was wrong or weak: The global error handler in `server.ts` caught a generic `Error` and always returned 500, hiding the actual error type from callers.
+  - Shape of my improvement: Added `src/lib/errors.ts` with `AppError`, `NotFoundError`, `ValidationError`, and `AuthError`; the handler now pattern-matches on `AppError` and returns the typed `statusCode` and `code`.
+  - Alternatives I considered and rejected: Attaching status codes directly to `Error` via duck-typing — rejected because subclasses make the hierarchy explicit and TypeScript-enforced.
+
+- **Step 3 — Centralised env-var config**
+  - What was wrong or weak: `DB_PATH` was read independently in `db.ts` and previously in `metrics.ts`; `PORT` was read inline in `server.ts` with no central ownership.
+  - Shape of my improvement: Added `src/config.ts` exporting `config.dbPath` and `config.port`; `db.ts` and `server.ts` now import from it; the `mkdir` guard skips when `dbPath === ':memory:'`.
+  - Alternatives I considered and rejected: Dotenv with a `.env` file — adds a dependency and file; `process.env` reads through one module are sufficient for this scale.
+
+- **Step 4 — Single DB seam confirmed and tested**
+  - What was wrong or weak: `getMetricsSummary` and `getTopCustomers` were migrated to the DAL in Step 1 but had no direct unit or route-integration tests.
+  - Shape of my improvement: Added `test/metrics.test.ts` covering both DAL methods at the unit level and the `/api/metrics` route at the integration level (6 DAL + 4 route tests).
+  - Alternatives I considered and rejected: Embedding metric assertions in the existing `orders.test.ts` — rejected to keep test files scoped to a single concern.
+
+- **Step 5 — Domain types in `src/domain/order/order.types.ts`**
+  - What was wrong or weak: `OrderRow`, `MetricsSummary`, and `TopCustomerRow` were declared inline in `orders-dal.ts`, mixing infrastructure and domain concerns in one file.
+  - Shape of my improvement: Extracted all order interfaces into `src/domain/order/order.types.ts` (no infrastructure imports); the DAL imports and re-exports them for backwards compatibility; `listByMerchant` and `create` now use `OrderFilters` and `CreateOrderInput`.
+  - Alternatives I considered and rejected: Keeping types in the DAL and importing into domain later — rejected because the point of Step 5 is to name the boundary explicitly before logic moves.
+
 ## Feature chosen
 
-- **Feature:** Step 1 of the DDD migration plan — fix all critical and high bugs in-place before any restructuring.
-- **Why this one and not the others:** Correctness is the prerequisite for safe refactoring. Restructuring broken code moves bugs into new places rather than removing them.
-- **What I cut to ship it in budget:** No new libraries, no architectural moves — purely surgical fixes within the existing file structure.
+- **Feature:** Steps 2–5 of the DDD migration plan — typed errors, centralised config, single DB seam validation, and explicit domain types.
+- **Why this one and not the others:** These are pure structural improvements with no behaviour change, safe to apply immediately on top of the Step 1 correctness fixes.
+- **What I cut to ship it in budget:** No logic moved to a service layer yet (Step 6); no repository interface defined yet (Step 7).
 
 ## Things I noticed but did NOT fix
 
 - `top-customers` SUM still includes refunds (scope limited to the AVG and revenue SUM identified in C-3).
 - No rate limiting on any endpoint.
-- `PORT` and `DB_PATH` env vars are still read inline in multiple files (addressed in Step 3 of the plan).
+- Routes still contain business logic (revenue calculation, order creation orchestration) — addressed in Step 6.
 
 ## Docs / code I left alone deliberately
 
 - `seed.ts` logic and the `npm run seed` script — correct and intentionally separate from the boot path after H-2.
-- The global error handler in `server.ts` — functional as-is; typed `AppError` subclasses are Step 2 of the migration plan.
+- Re-exports in `orders-dal.ts` — intentional for backwards compatibility while the domain boundary matures.
 
 ## What I'd do with another 6 hours
 
-- Steps 2–4 of the migration plan: typed `AppError` classes, a single `config.ts` for env vars, and completing the DAL as the only DB seam.
-- Add an integration smoke-test that boots the full Express app and hits every endpoint.
+- Steps 6–8 of the migration plan: extract an `order.service.ts`, define `IOrderRepository`, rename the DAL to `order.sqlite.repo.ts`, and enforce import boundaries via a lint rule.
