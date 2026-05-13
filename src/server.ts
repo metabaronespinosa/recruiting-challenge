@@ -4,6 +4,7 @@ import { authMiddleware } from './auth.js';
 import { ordersRouter } from './routes/orders.js';
 import { revenueRouter } from './routes/revenue.js';
 import { metricsRouter } from './routes/metrics.js';
+import { AppError } from './lib/errors.js';
 
 // Only initialise the schema on boot; seeding is handled by `npm run seed`.
 initSchema();
@@ -23,6 +24,14 @@ app.use('/api/revenue', authMiddleware, revenueRouter);
 app.use('/api/metrics', authMiddleware, metricsRouter);
 
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  if (err instanceof AppError) {
+    // Known, typed errors — surface the status code and structured body
+    res
+      .status(err.statusCode)
+      .json({ error: err.code, detail: err.message });
+    return;
+  }
+  // Unknown errors — log and hide internals
   console.error(err);
   res.status(500).json({ error: 'internal_error' });
 });
