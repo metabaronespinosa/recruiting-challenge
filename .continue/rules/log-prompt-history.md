@@ -28,6 +28,10 @@ At the end of every chat session, append a new session block to `prompt_history.
 ---
 ```
 
+## Also apply
+
+- After appending to `prompt_history.md`, apply the **Update Decision Log** rule (`update-decision-log.md`) to update `decision_log.md` for any code changes made in the session.
+
 ## Constraints
 
 - Reproduce the user's prompts **verbatim** — do not paraphrase or clean them up.
