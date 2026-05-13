@@ -106,3 +106,32 @@ Accepted as-is. The rule uses `alwaysApply: false` so it only fires when explici
 or included in a session context, avoiding noise on every single interaction.
 
 ---
+
+## Session 4 — Step 1: fix all critical and high bugs in-place
+
+**Prompt:**
+```
+In this session we are going through the step #1 of the /docs/AUDIT.md migration plan.
+These are the considerations you need to take into account for every fix:
+- Generate a commit for every single fix
+- Validate tests in /test/*/*test.ts pass every time and add new tests if apply for current changes
+Additional note: at the end add a single entry on the promp_history.md with a brief description of all the updates madre (look at log-prompt-history.md rule)
+```
+
+**What the model returned:**
+Fixed all seven issues from the audit (C-1 through H-3) across seven individual commits, each
+preceded by a full test run. C-1: added `merchant_id` parameter to `getById` with SQL AND guard.
+C-2: `authMiddleware` now queries the merchants table and rejects unknown IDs with 401. C-3:
+added `AND type = 'sale'` to the SUM and AVG queries. C-4: added email regex, `Number.isFinite`
++ non-negative check, and `Set` membership validation to `POST /api/orders`. H-1: deleted the
+second `better-sqlite3` instance from `metrics.ts` and moved its three queries into two new DAL
+methods (`getMetricsSummary`, `getTopCustomers`). H-2: removed `seedIfEmpty()` from `server.ts`
+boot path. H-3: created `src/routes/query-validation.ts` with `isValidDate` and `clampLimit`
+helpers, applied to orders and revenue routes. Added three new test files (`auth.test.ts`,
+`orders-routes.test.ts`, `query-validation.test.ts`) growing coverage from 2 to 32 passing tests.
+
+**What I accepted, rejected, or refined:**
+Accepted all changes as-is. Each fix maps 1-to-1 to the audit item, stays within the existing
+file structure as required by Step 1, and introduces no new libraries.
+
+---
