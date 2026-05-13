@@ -135,3 +135,20 @@ Accepted all changes as-is. Each fix maps 1-to-1 to the audit item, stays within
 file structure as required by Step 1, and introduces no new libraries.
 
 ---
+
+## Session 5 — Populate decision_log.md with justifications for all Step 1 fixes
+
+**Prompt:**
+```
+From the above fixes list, you need to justify your decisions by updating decision_log.md, read the template to understand the structure and add an entry for every single fix, dont forget to apply log-prompt-history.md rule at the end
+
+try being more brief and concise, no need to include every detail just a high level approach
+```
+
+**What the model returned:**
+Populated `decision_log.md` with all seven Step 1 fixes following the template structure (what was wrong, shape of improvement, alternatives rejected), plus feature chosen, things not fixed, code left alone deliberately, and next steps. Kept each entry to 2–3 sentences per field.
+
+**What I accepted, rejected, or refined:**
+First attempt was too verbose; user asked for a more concise, high-level approach. Accepted the trimmed version as-is.
+
+---
