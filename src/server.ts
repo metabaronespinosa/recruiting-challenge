@@ -1,9 +1,11 @@
 import express from 'express';
 import { initSchema } from './db.js';
 import { authMiddleware } from './auth.js';
-import { ordersRouter } from './routes/orders.js';
-import { revenueRouter } from './routes/revenue.js';
-import { metricsRouter } from './routes/metrics.js';
+import { ordersDal } from './dal/orders-dal.js';
+import { createOrderService } from './domain/order/order.service.js';
+import { createOrdersRouter } from './routes/orders.js';
+import { createRevenueRouter } from './routes/revenue.js';
+import { createMetricsRouter } from './routes/metrics.js';
 import { AppError } from './lib/errors.js';
 import { config } from './config.js';
 
@@ -13,6 +15,9 @@ initSchema();
 const app = express();
 const { port } = config;
 
+// Wire the service once at application startup and inject into every router.
+const orderService = createOrderService(ordersDal);
+
 app.use(express.json());
 app.use(express.static('public'));
 
@@ -20,9 +25,9 @@ app.get('/api/health', (_req, res) => {
   res.json({ ok: true });
 });
 
-app.use('/api/orders', authMiddleware, ordersRouter);
-app.use('/api/revenue', authMiddleware, revenueRouter);
-app.use('/api/metrics', authMiddleware, metricsRouter);
+app.use('/api/orders', authMiddleware, createOrdersRouter(orderService));
+app.use('/api/revenue', authMiddleware, createRevenueRouter(orderService));
+app.use('/api/metrics', authMiddleware, createMetricsRouter(orderService));
 
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   if (err instanceof AppError) {

@@ -1,41 +1,52 @@
 import { Router } from 'express';
-import { ordersDal } from '../dal/orders-dal.js';
 import { isValidDate } from './query-validation.js';
-
-export const revenueRouter = Router();
+import type { OrderService } from '../domain/order/order.service.js';
 
 /**
- * GET /api/revenue?from=YYYY-MM-DD&to=YYYY-MM-DD
- *
- * Returns total revenue for the authenticated merchant in the given date range.
+ * Builds the revenue router bound to the provided OrderService.
  */
-revenueRouter.get('/', (req, res) => {
-  const from = typeof req.query.from === 'string' ? req.query.from : undefined;
-  const to   = typeof req.query.to   === 'string' ? req.query.to   : undefined;
+export function createRevenueRouter(orderService: OrderService): Router {
+  const router = Router();
 
-  if (!from || !to) {
-    res.status(400).json({ error: 'missing_date_range', detail: 'from and to are required (YYYY-MM-DD)' });
-    return;
-  }
-  if (!isValidDate(from)) {
-    res.status(400).json({ error: 'invalid_query', detail: 'from must be a valid date (YYYY-MM-DD)' });
-    return;
-  }
-  if (!isValidDate(to)) {
-    res.status(400).json({ error: 'invalid_query', detail: 'to must be a valid date (YYYY-MM-DD)' });
-    return;
-  }
-  if (from > to) {
-    res.status(400).json({ error: 'invalid_query', detail: 'from must not be after to' });
-    return;
-  }
+  /**
+   * GET /api/revenue?from=YYYY-MM-DD&to=YYYY-MM-DD
+   *
+   * Returns total revenue for the authenticated merchant in the given date range.
+   */
+  router.get('/', (req, res, next) => {
+    const from = typeof req.query.from === 'string' ? req.query.from : undefined;
+    const to   = typeof req.query.to   === 'string' ? req.query.to   : undefined;
 
-  const total = ordersDal.sumAmountByMerchant(req.merchantId!, from, to);
-  res.json({
-    merchant_id: req.merchantId,
-    from,
-    to,
-    revenue_cents: total,
-    revenue: total / 100,
+    if (!from || !to) {
+      res.status(400).json({ error: 'missing_date_range', detail: 'from and to are required (YYYY-MM-DD)' });
+      return;
+    }
+    if (!isValidDate(from)) {
+      res.status(400).json({ error: 'invalid_query', detail: 'from must be a valid date (YYYY-MM-DD)' });
+      return;
+    }
+    if (!isValidDate(to)) {
+      res.status(400).json({ error: 'invalid_query', detail: 'to must be a valid date (YYYY-MM-DD)' });
+      return;
+    }
+    if (from > to) {
+      res.status(400).json({ error: 'invalid_query', detail: 'from must not be after to' });
+      return;
+    }
+
+    try {
+      const result = orderService.getRevenue(req.merchantId!, from, to);
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
   });
-});
+
+  return router;
+}
+
+/**
+ * @deprecated Use createRevenueRouter(orderService) instead.
+ * Singleton wired to the concrete SQLite DAL for backwards compatibility.
+ */
+export { revenueRouter } from './revenue.legacy.js';
