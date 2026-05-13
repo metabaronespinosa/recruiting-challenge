@@ -152,3 +152,18 @@ Populated `decision_log.md` with all seven Step 1 fixes following the template s
 First attempt was too verbose; user asked for a more concise, high-level approach. Accepted the trimmed version as-is.
 
 ---
+
+## Session 6 — Add update-decision-log Continue.dev rule and link from prompt-history rule
+
+**Prompt:**
+```
+thanks for that, add a new continue.dev rule to apply the same process (decision_log.md) for every new update, include in the rule to be as clear and consice as possible, also check log-prompt-history.md rule in case you need to add the same over there
+```
+
+**What the model returned:**
+Created `.continue/rules/update-decision-log.md` with instructions to append one structured bullet per issue fixed (what was wrong, shape of improvement, alternatives rejected) plus guidance on updating the four closing sections. Updated `log-prompt-history.md` to add an "Also apply" section that references the new rule, so both fire together at the end of every session.
+
+**What I accepted, rejected, or refined:**
+Accepted as-is.
+
+---
