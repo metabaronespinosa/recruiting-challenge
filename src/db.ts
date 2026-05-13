@@ -1,14 +1,15 @@
 import Database from 'better-sqlite3';
 import { mkdirSync, existsSync } from 'node:fs';
 import { dirname } from 'node:path';
+import { config } from './config.js';
 
-const DB_PATH = process.env.DB_PATH ?? 'data/dashboard.db';
+const { dbPath } = config;
 
-if (!existsSync(dirname(DB_PATH))) {
-  mkdirSync(dirname(DB_PATH), { recursive: true });
+if (dbPath !== ':memory:' && !existsSync(dirname(dbPath))) {
+  mkdirSync(dirname(dbPath), { recursive: true });
 }
 
-export const db = new Database(DB_PATH);
+export const db = new Database(dbPath);
 db.pragma('journal_mode = WAL');
 db.pragma('foreign_keys = ON');
 

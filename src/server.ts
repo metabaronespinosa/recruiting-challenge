@@ -5,12 +5,13 @@ import { ordersRouter } from './routes/orders.js';
 import { revenueRouter } from './routes/revenue.js';
 import { metricsRouter } from './routes/metrics.js';
 import { AppError } from './lib/errors.js';
+import { config } from './config.js';
 
 // Only initialise the schema on boot; seeding is handled by `npm run seed`.
 initSchema();
 
 const app = express();
-const PORT = Number(process.env.PORT ?? 3000);
+const { port } = config;
 
 app.use(express.json());
 app.use(express.static('public'));
@@ -36,6 +37,6 @@ app.use((err: Error, _req: express.Request, res: express.Response, _next: expres
   res.status(500).json({ error: 'internal_error' });
 });
 
-app.listen(PORT, () => {
-  console.log(`dashboard server listening on http://localhost:${PORT}`);
+app.listen(port, () => {
+  console.log(`dashboard server listening on http://localhost:${port}`);
 });
