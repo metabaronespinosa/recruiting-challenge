@@ -189,3 +189,25 @@ Executed four sequential commits covering Steps 2–5 of the migration plan, eac
 Accepted all changes as-is. No new API versions were needed since none of the structural changes altered existing endpoint contracts. The backwards-compatible re-export pattern in `orders-dal.ts` was a deliberate design choice to avoid breaking any existing importers during the incremental migration.
 
 ---
+
+## Session 8 — Steps 6–8 of the DDD migration plan
+
+**Prompt:**
+```
+In this session we are going through the steps #6 to #8 of the /docs/AUDIT.md migration plan.
+These are the considerations you need to take into account for every update:
+- Generate a commit for every single update
+- Validate tests in /test/*/*test.ts pass every time and add new tests if apply for current changes
+- Make sure the API has a strong scalable design, if you detect there is better design for a certain endpoint, create a new version with expressjs routes so no breaking changes are introduced for users of previous versions
+Additional notes:
+- Be concise with testing coverage, no need to cover every single edge case for now.
+- Don't forget to apply continue.dev rules for each update
+```
+
+**What the model returned:**
+Executed three sequential commits covering Steps 6–8. Step 6: created `src/domain/order/order.service.ts` with a `createOrderService(repo)` factory centralising all business logic; refactored orders, revenue, and metrics route files into `create*Router(service)` factories; added backwards-compatible legacy shims so all existing test imports continued to work; updated `server.ts` to wire one service instance at startup; added `test/order-service.test.ts` (14 tests). Step 7: declared `IOrderRepository` in `src/domain/order/order.repository.ts`; moved all SQL into `src/infrastructure/sqlite/order.sqlite.repo.ts` implementing the interface; reduced `orders-dal.ts` to a one-line re-export shim; updated server and legacy shims to import from the canonical infrastructure path; added `test/order-repository.test.ts` (12 tests). Step 8: created `src/scripts/check-domain-deps.ts` — a zero-dependency script that scans `src/domain/` for forbidden imports (`express`, `better-sqlite3`, `infrastructure/`) and exits 1 on any match; added `check:domain-deps` npm script; added `test/domain-deps.test.ts` (2 tests). Final state: 82/82 tests passing.
+
+**What I accepted, rejected, or refined:**
+Accepted all changes as-is. The factory-function pattern for both the service and routers was chosen over classes to avoid `this` binding issues and enable clean dependency injection. The check-domain-deps script uses no new libraries, matching the project's no-new-dependencies constraint from the migration plan.
+
+---

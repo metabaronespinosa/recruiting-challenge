@@ -65,17 +65,34 @@
 - **Why this one and not the others:** These are pure structural improvements with no behaviour change, safe to apply immediately on top of the Step 1 correctness fixes.
 - **What I cut to ship it in budget:** No logic moved to a service layer yet (Step 6); no repository interface defined yet (Step 7).
 
+- **Step 6 — OrderService use-case layer**
+  - What was wrong or weak: Routes contained all business logic (validation, revenue calculation, IDOR guard), making them untestable without an HTTP layer.
+  - Shape of my improvement: Created `src/domain/order/order.service.ts` with a `createOrderService(repo)` factory; each route file refactored to a `create*Router(service)` factory; legacy singleton shims preserve backwards-compatible imports; `server.ts` wires one service instance at startup.
+  - Alternatives I considered and rejected: Class-based service — rejected in favour of a factory function to avoid `this` binding issues and keep the interface purely structural.
+
+- **Step 7 — IOrderRepository port + infrastructure relocation**
+  - What was wrong or weak: The service depended directly on a concrete DAL object rather than an abstraction, making it impossible to swap the storage backend without touching domain code.
+  - Shape of my improvement: Declared `IOrderRepository` in `src/domain/order/order.repository.ts`; moved all SQL into `src/infrastructure/sqlite/order.sqlite.repo.ts` which explicitly implements the interface; reduced `orders-dal.ts` to a one-line re-export shim for backwards compatibility.
+  - Alternatives I considered and rejected: Deleting `orders-dal.ts` immediately — rejected to avoid breaking the existing test files in one large jump; shim keeps the migration incremental.
+
+- **Step 8 — Domain dependency rule enforcement**
+  - What was wrong or weak: Nothing prevented a future developer from accidentally importing `express` or `better-sqlite3` inside `src/domain/`, silently violating the clean-architecture boundary.
+  - Shape of my improvement: Created `src/scripts/check-domain-deps.ts` — a zero-dependency Node.js script that recursively scans `src/domain/` for forbidden import patterns and exits 1 on any match; wired as `npm run check:domain-deps`; added `test/domain-deps.test.ts` (2 tests) so CI catches violations automatically.
+  - Alternatives I considered and rejected: An ESLint `no-restricted-imports` rule — correct long-term but requires adding ESLint as a dependency; the custom script enforces the same rule with no new packages.
+
 ## Things I noticed but did NOT fix
 
 - `top-customers` SUM still includes refunds (scope limited to the AVG and revenue SUM identified in C-3).
 - No rate limiting on any endpoint.
-- Routes still contain business logic (revenue calculation, order creation orchestration) — addressed in Step 6.
+- `orders-dal.ts` shim and legacy route shims could be cleaned up once all callers are migrated.
 
 ## Docs / code I left alone deliberately
 
 - `seed.ts` logic and the `npm run seed` script — correct and intentionally separate from the boot path after H-2.
-- Re-exports in `orders-dal.ts` — intentional for backwards compatibility while the domain boundary matures.
+- Re-exports in `orders-dal.ts` — intentional backwards-compatibility shim; removal is a clean-up task, not a correctness issue.
 
 ## What I'd do with another 6 hours
 
-- Steps 6–8 of the migration plan: extract an `order.service.ts`, define `IOrderRepository`, rename the DAL to `order.sqlite.repo.ts`, and enforce import boundaries via a lint rule.
+- Delete the DAL shim and legacy route shims once all direct callers migrate to `orderSqliteRepo` / factory routers.
+- Integrate `check:domain-deps` into a pre-commit hook (Husky) or CI step.
+- Add an in-memory `IOrderRepository` stub for pure unit-testing the service without a SQLite DB.
