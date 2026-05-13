@@ -251,3 +251,27 @@ Accepted as-is. Ordering was intentional: OpenAPI first because the contract ben
 subsequent initiative; observability before tests because it aids CI debugging; tests before
 Terraform so the deployment gate is meaningful; billing last because it requires stable infra,
 observability, and a test harness to safely run payment webhooks in production.
+
+---
+
+## Session 10 — Feature C: order search with filters + routing fix
+
+**Prompts:**
+```
+1. I was missing to implement one of the features described in the README.md file so in this
+   session we will be implementing that. Implement only Feature C in a single commit, add
+   proper tests (50% coverage is fine). When adding the decision_log.md entry include a brief
+   explanation on why we focused first on robustness/scalability before new features.
+
+2. Filtering results in the UI is not working. The UI requests
+   /orders/search?email=carla%40example.com&limit=10&offset=0 but gets 404.
+   Handle no results with 200 + empty array. Be clear and concise, no extra implementation.
+
+3. Add a prompt_history.md entry for this session. You are adding the new entry in wrong order.
+```
+
+**What the model returned:**
+Prompt 1: implemented Feature C in a single commit — `OrderSearchFilters` and `OrderSearchResult` types; `searchOrders` on `IOrderRepository`, `OrderService`, and `order.sqlite.repo.ts` (dynamic WHERE clause + COUNT for pagination); new `src/routes/search.ts` mounted at `GET /api/orders/search`; dashboard search form with seven fields and prev/next pagination; `test/search.test.ts` with 33 tests (115/115 passing); Feature C entry appended to `decision_log.md`. Prompt 2: `createOrdersRouter` at `/api/orders` was consuming `/api/orders/search` before the search router was reached — fixed with a one-line swap in `server.ts` to register the more-specific path first. Prompt 3: session entry was inserted before Session 9 instead of after it; corrected by appending at the bottom.
+
+**What I accepted, rejected, or refined:**
+Prompt 1 accepted as-is. Prompt 2 root cause was straightforward; no extra implementation added as instructed. Prompt 3 required two correction attempts due to file-content mismatches between reads and edits.
