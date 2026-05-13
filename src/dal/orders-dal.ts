@@ -1,26 +1,21 @@
 import { db } from '../db.js';
+import type {
+  OrderRow,
+  CreateOrderInput,
+  OrderFilters,
+  MetricsSummary,
+  TopCustomerRow,
+} from '../domain/order/order.types.js';
 
-export interface MetricsSummary {
-  total_orders: number;
-  unique_customers: number;
-  avg_order_value_cents: number;
-}
-
-export interface TopCustomerRow {
-  customer_email: string;
-  order_count: number;
-  total_spent: number;
-}
-
-export interface OrderRow {
-  id: string;
-  merchant_id: string;
-  customer_email: string;
-  total_amount: number;
-  type: 'sale' | 'refund';
-  status: string;
-  created_at: string;
-}
+// Re-export domain types so existing importers of orders-dal.ts keep working
+// without update (backwards-compatible re-export).
+export type {
+  OrderRow,
+  CreateOrderInput,
+  OrderFilters,
+  MetricsSummary,
+  TopCustomerRow,
+} from '../domain/order/order.types.js';
 
 /**
  * Data-access layer for orders. All order queries should go through here.
@@ -30,7 +25,7 @@ export interface OrderRow {
  * - the seam for swapping the underlying store
  */
 export const ordersDal = {
-  listByMerchant(merchantId: string, opts: { from?: string; to?: string; limit?: number } = {}): OrderRow[] {
+  listByMerchant(merchantId: string, opts: OrderFilters = {}): OrderRow[] {
     const limit = opts.limit ?? 100;
     if (opts.from && opts.to) {
       return db
@@ -53,7 +48,7 @@ export const ordersDal = {
       .get(id, merchantId) as OrderRow | undefined;
   },
 
-  create(order: Omit<OrderRow, 'created_at'>): OrderRow {
+  create(order: CreateOrderInput): OrderRow {
     db.prepare(
       `INSERT INTO orders (id, merchant_id, customer_email, total_amount, type, status)
        VALUES (?, ?, ?, ?, ?, ?)`,
