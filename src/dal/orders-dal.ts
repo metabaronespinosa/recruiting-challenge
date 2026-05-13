@@ -1,5 +1,17 @@
 import { db } from '../db.js';
 
+export interface MetricsSummary {
+  total_orders: number;
+  unique_customers: number;
+  avg_order_value_cents: number;
+}
+
+export interface TopCustomerRow {
+  customer_email: string;
+  order_count: number;
+  total_spent: number;
+}
+
 export interface OrderRow {
   id: string;
   merchant_id: string;
@@ -64,5 +76,47 @@ export const ordersDal = {
       )
       .get(merchantId, from, to) as { total: number };
     return row.total;
+  },
+
+  /**
+   * Aggregate summary stats for the metrics/summary endpoint.
+   * AVG is computed over sales only (type = 'sale') to match revenue logic.
+   */
+  getMetricsSummary(merchantId: string): MetricsSummary {
+    const totalOrdersRow = db
+      .prepare(`SELECT COUNT(*) AS n FROM orders WHERE merchant_id = ?`)
+      .get(merchantId) as { n: number };
+
+    const uniqueCustomersRow = db
+      .prepare(`SELECT COUNT(DISTINCT customer_email) AS n FROM orders WHERE merchant_id = ?`)
+      .get(merchantId) as { n: number };
+
+    const avgOrderRow = db
+      .prepare(
+        `SELECT COALESCE(AVG(total_amount), 0) AS avg FROM orders WHERE merchant_id = ? AND type = 'sale'`,
+      )
+      .get(merchantId) as { avg: number };
+
+    return {
+      total_orders: totalOrdersRow.n,
+      unique_customers: uniqueCustomersRow.n,
+      avg_order_value_cents: Math.round(avgOrderRow.avg),
+    };
+  },
+
+  /**
+   * Top customers ranked by total amount spent (sales only) for a merchant.
+   */
+  getTopCustomers(merchantId: string, limit: number): TopCustomerRow[] {
+    return db
+      .prepare(
+        `SELECT customer_email, COUNT(*) AS order_count, SUM(total_amount) AS total_spent
+         FROM orders
+         WHERE merchant_id = ?
+         GROUP BY customer_email
+         ORDER BY total_spent DESC
+         LIMIT ?`,
+      )
+      .all(merchantId, limit) as TopCustomerRow[];
   },
 };
