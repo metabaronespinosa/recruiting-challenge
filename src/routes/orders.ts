@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { ordersDal } from '../dal/orders-dal.js';
 import { randomUUID } from 'node:crypto';
+import { isValidDate, clampLimit } from './query-validation.js';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const VALID_TYPES = new Set<string>(['sale', 'refund']);
@@ -8,11 +9,28 @@ const VALID_TYPES = new Set<string>(['sale', 'refund']);
 export const ordersRouter = Router();
 
 ordersRouter.get('/', (req, res) => {
-  const orders = ordersDal.listByMerchant(req.merchantId!, {
-    from: typeof req.query.from === 'string' ? req.query.from : undefined,
-    to: typeof req.query.to === 'string' ? req.query.to : undefined,
-    limit: typeof req.query.limit === 'string' ? Number(req.query.limit) : undefined,
-  });
+  const from = typeof req.query.from === 'string' ? req.query.from : undefined;
+  const to   = typeof req.query.to   === 'string' ? req.query.to   : undefined;
+
+  // Validate date format when supplied
+  if (from !== undefined && !isValidDate(from)) {
+    res.status(400).json({ error: 'invalid_query', detail: 'from must be a valid date (YYYY-MM-DD)' });
+    return;
+  }
+  if (to !== undefined && !isValidDate(to)) {
+    res.status(400).json({ error: 'invalid_query', detail: 'to must be a valid date (YYYY-MM-DD)' });
+    return;
+  }
+  // Reject inverted ranges
+  if (from !== undefined && to !== undefined && from > to) {
+    res.status(400).json({ error: 'invalid_query', detail: 'from must not be after to' });
+    return;
+  }
+
+  const rawLimit = typeof req.query.limit === 'string' ? Number(req.query.limit) : undefined;
+  const limit = rawLimit !== undefined ? clampLimit(rawLimit) : undefined;
+
+  const orders = ordersDal.listByMerchant(req.merchantId!, { from, to, limit });
   res.json({ orders });
 });
 
