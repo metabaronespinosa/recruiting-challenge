@@ -17,6 +17,16 @@
       th, td { text-align: left; padding: 0.5rem; border-bottom: 1px solid #ccc4; }
       th { font-weight: 600; opacity: 0.8; }
       .muted { opacity: 0.6; }
+      .search-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem; margin: 1rem 0; }
+      .search-form label { display: flex; flex-direction: column; font-size: 0.8rem; opacity: 0.8; gap: 0.25rem; }
+      .search-form input, .search-form select { padding: 0.35rem 0.5rem; border: 1px solid #ccc6; border-radius: 4px; font-size: 0.95rem; background: inherit; color: inherit; }
+      .search-actions { display: flex; gap: 0.75rem; align-items: center; margin-bottom: 0.5rem; }
+      .search-actions button { padding: 0.4rem 1rem; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9rem; }
+      #search-btn { background: #0070f3; color: #fff; }
+      #search-clear { background: transparent; border: 1px solid #ccc6 !important; }
+      .pagination { display: flex; gap: 0.5rem; align-items: center; margin-top: 0.75rem; font-size: 0.9rem; }
+      .pagination button { padding: 0.3rem 0.75rem; border: 1px solid #ccc6; border-radius: 4px; cursor: pointer; background: inherit; color: inherit; }
+      .pagination button:disabled { opacity: 0.4; cursor: default; }
     </style>
   </head>
   <body>
@@ -50,6 +60,58 @@
         </thead>
         <tbody id="orders-tbody"></tbody>
       </table>
+    </section>
+
+    <section>
+      <h2>Search orders</h2>
+      <div class="search-form">
+        <label>Customer email
+          <input id="s-email" type="email" placeholder="customer@example.com" />
+        </label>
+        <label>Status
+          <select id="s-status">
+            <option value="">Any</option>
+            <option value="completed">Completed</option>
+            <option value="pending">Pending</option>
+            <option value="refunded">Refunded</option>
+          </select>
+        </label>
+        <label>Type
+          <select id="s-type">
+            <option value="">Any</option>
+            <option value="sale">Sale</option>
+            <option value="refund">Refund</option>
+          </select>
+        </label>
+        <label>From (date)
+          <input id="s-from" type="date" />
+        </label>
+        <label>To (date)
+          <input id="s-to" type="date" />
+        </label>
+        <label>Min amount ($)
+          <input id="s-min" type="number" min="0" step="0.01" placeholder="0.00" />
+        </label>
+        <label>Max amount ($)
+          <input id="s-max" type="number" min="0" step="0.01" placeholder="any" />
+        </label>
+      </div>
+      <div class="search-actions">
+        <button id="search-btn">Search</button>
+        <button id="search-clear">Clear</button>
+        <span id="search-status" class="muted"></span>
+      </div>
+      <table id="search-table" hidden>
+        <thead>
+          <tr><th>Date</th><th>Customer</th><th>Status</th><th>Type</th><th>Amount</th></tr>
+        </thead>
+        <tbody id="search-tbody"></tbody>
+      </table>
+      <div class="pagination" id="search-pagination" hidden>
+        <button id="page-prev" disabled>&#8592; Prev</button>
+        <span id="page-info"></span>
+        <button id="page-next">Next &#8594;</button>
+      </div>
     </section>
 
     <script src="/app.js"></script>

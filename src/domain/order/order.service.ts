@@ -14,6 +14,8 @@ import type {
   OrderRow,
   CreateOrderInput,
   OrderFilters,
+  OrderSearchFilters,
+  OrderSearchResult,
   MetricsSummary,
   TopCustomerRow,
   OrderType,
@@ -35,6 +37,19 @@ export interface CreateOrderBody {
   customer_email?: unknown;
   total_amount?: unknown;
   type?: unknown;
+}
+
+/** Raw query-string fields received by the search endpoint. */
+export interface SearchOrdersQuery {
+  email?: unknown;
+  status?: unknown;
+  type?: unknown;
+  from?: unknown;
+  to?: unknown;
+  minAmount?: unknown;
+  maxAmount?: unknown;
+  limit?: unknown;
+  offset?: unknown;
 }
 
 /** Result returned by the revenue query use-case. */
@@ -148,6 +163,94 @@ export function createOrderService(repo: IOrderRepository) {
      */
     getTopCustomers(merchantId: string, limit: number): TopCustomerRow[] {
       return repo.getTopCustomers(merchantId, limit);
+    },
+
+    /**
+     * Search orders for the merchant using rich filter criteria.
+     *
+     * Validates every parameter before delegating to the repository so the
+     * persistence layer never receives malformed input.
+     */
+    searchOrders(merchantId: string, query: SearchOrdersQuery): OrderSearchResult {
+      const filters: OrderSearchFilters = {};
+
+      if (query.email !== undefined) {
+        if (typeof query.email !== 'string' || !EMAIL_RE.test(query.email)) {
+          throw new ValidationError('email must be a valid email address', 'invalid_query');
+        }
+        filters.email = query.email;
+      }
+
+      if (query.status !== undefined) {
+        if (typeof query.status !== 'string' || query.status.trim() === '') {
+          throw new ValidationError('status must be a non-empty string', 'invalid_query');
+        }
+        filters.status = query.status.trim();
+      }
+
+      if (query.type !== undefined) {
+        if (!VALID_TYPES.has(query.type as OrderType)) {
+          throw new ValidationError('type must be sale or refund', 'invalid_query');
+        }
+        filters.type = query.type as OrderType;
+      }
+
+      if (query.from !== undefined) {
+        if (typeof query.from !== 'string') {
+          throw new ValidationError('from must be a date string (YYYY-MM-DD)', 'invalid_query');
+        }
+        filters.from = query.from;
+      }
+
+      if (query.to !== undefined) {
+        if (typeof query.to !== 'string') {
+          throw new ValidationError('to must be a date string (YYYY-MM-DD)', 'invalid_query');
+        }
+        filters.to = query.to;
+      }
+
+      if (filters.from !== undefined && filters.to !== undefined && filters.from > filters.to) {
+        throw new ValidationError('from must not be after to', 'invalid_query');
+      }
+
+      if (query.minAmount !== undefined) {
+        const n = Number(query.minAmount);
+        if (!Number.isFinite(n) || n < 0) {
+          throw new ValidationError('minAmount must be a non-negative number', 'invalid_query');
+        }
+        filters.minAmount = n;
+      }
+
+      if (query.maxAmount !== undefined) {
+        const n = Number(query.maxAmount);
+        if (!Number.isFinite(n) || n < 0) {
+          throw new ValidationError('maxAmount must be a non-negative number', 'invalid_query');
+        }
+        filters.maxAmount = n;
+      }
+
+      if (filters.minAmount !== undefined && filters.maxAmount !== undefined &&
+          filters.minAmount > filters.maxAmount) {
+        throw new ValidationError('minAmount must not be greater than maxAmount', 'invalid_query');
+      }
+
+      if (query.limit !== undefined) {
+        const n = Number(query.limit);
+        if (!Number.isFinite(n) || n < 1) {
+          throw new ValidationError('limit must be a positive integer', 'invalid_query');
+        }
+        filters.limit = Math.min(Math.floor(n), 500);
+      }
+
+      if (query.offset !== undefined) {
+        const n = Number(query.offset);
+        if (!Number.isFinite(n) || n < 0) {
+          throw new ValidationError('offset must be a non-negative integer', 'invalid_query');
+        }
+        filters.offset = Math.floor(n);
+      }
+
+      return repo.searchOrders(merchantId, filters);
     },
   };
 }

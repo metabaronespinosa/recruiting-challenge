@@ -108,3 +108,17 @@
   - React Query setup
   - C4 Model documentation
   - AI Rules including component design patterns and naming conventions
+
+- **Feature C — Order search with filters**
+  - **What was missing:** No way for merchants to find orders by customer email, status, type, date range, or amount range. The only list endpoint returned the 100 most-recent orders with basic date filtering — useless for support workflows or reconciliation.
+  - **Why we tackled robustness first (see `/docs/AUDIT.md`):** Implementing a feature on top of broken foundations would have meant shipping new surface area that inherited the same IDOR, authentication, and revenue-inflation bugs. A compromised search endpoint could have exposed any merchant's orders to any other caller (C-1), accepted arbitrary string merchant IDs as valid identities (C-2), and returned inflated financial figures (C-3). Beyond correctness, building the feature before the DDD migration would have forced query-validation logic and SQL into the route handler, making it untestable without HTTP and impossible to swap the storage backend later. By completing Steps 1–8 first, Feature C could be implemented cleanly: one `searchOrders` method on `IOrderRepository`, one use-case method on `OrderService` with isolated validation, and a thin route adapter — each layer testable independently and none depending on infrastructure it doesn’t own.
+  - **Shape of the implementation:**
+    - `OrderSearchFilters` and `OrderSearchResult` types added to `src/domain/order/order.types.ts`.
+    - `searchOrders` method added to `IOrderRepository` in `src/domain/order/order.repository.ts`.
+    - SQL implementation in `src/infrastructure/sqlite/order.sqlite.repo.ts`: dynamically builds the `WHERE` clause from whichever filters are present; runs a `COUNT(*)` query first so the caller always has the total matching set size for pagination without a second round-trip.
+    - Validation in `src/domain/order/order.service.ts`: email regex, allowed type values, date-string type checks, non-negative amount checks, inverted-range guards, limit clamping (max 500), non-negative offset — all throw `ValidationError` before touching the repository.
+    - New route `src/routes/search.ts` mounted at `GET /api/orders/search` with date-format validation at the HTTP boundary (consistent with existing routes) and full delegation of business rules to the service.
+    - Dashboard UI updated: `public/index.html` adds a seven-field search form (email, status, type, from, to, min/max amount); `public/app.js` wires the form to the API, converts dollar inputs to cents, and provides prev/next pagination controls.
+  - **Pagination design:** offset-based pagination chosen for simplicity and compatibility with arbitrary filter combinations; limit defaults to 50, clamped to 500; `hasMore` flag lets the UI avoid an extra count request; `total` is always returned so the UI can render “Page X of Y”.
+  - **Performance note:** A suggested composite index `(merchant_id, type, status, created_at, customer_email)` is documented in the repository implementation; not applied in migration as schema changes are out of scope for this session.
+  - **Tests:** `test/search.test.ts` — 33 tests across three layers (11 repository, 11 service, 11 route integration); all 115 tests in the suite pass.

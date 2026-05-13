@@ -6,6 +6,7 @@ import { createOrderService } from './domain/order/order.service.js';
 import { createOrdersRouter } from './routes/orders.js';
 import { createRevenueRouter } from './routes/revenue.js';
 import { createMetricsRouter } from './routes/metrics.js';
+import { createSearchRouter } from './routes/search.js';
 import { AppError } from './lib/errors.js';
 import { config } from './config.js';
 
@@ -26,6 +27,7 @@ app.get('/api/health', (_req, res) => {
 });
 
 app.use('/api/orders', authMiddleware, createOrdersRouter(orderService));
+app.use('/api/orders/search', authMiddleware, createSearchRouter(orderService));
 app.use('/api/revenue', authMiddleware, createRevenueRouter(orderService));
 app.use('/api/metrics', authMiddleware, createMetricsRouter(orderService));
 

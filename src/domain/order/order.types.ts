@@ -32,6 +32,40 @@ export interface OrderFilters {
   limit?: number;
 }
 
+/**
+ * Rich filter bag for the order-search use-case (Feature C).
+ * Every field is optional; omitted fields are not applied as filters.
+ */
+export interface OrderSearchFilters {
+  /** Match orders whose customer_email equals this value (case-insensitive). */
+  email?: string;
+  /** Match orders with this status (e.g. 'completed', 'pending'). */
+  status?: string;
+  /** Match orders of this type ('sale' or 'refund'). */
+  type?: OrderType;
+  /** ISO date string lower bound (YYYY-MM-DD), inclusive. */
+  from?: string;
+  /** ISO date string upper bound (YYYY-MM-DD), exclusive. */
+  to?: string;
+  /** Minimum total_amount (inclusive), in cents. */
+  minAmount?: number;
+  /** Maximum total_amount (inclusive), in cents. */
+  maxAmount?: number;
+  /** Maximum number of rows to return; defaults to 50, clamped to 500. */
+  limit?: number;
+  /** Offset for pagination; defaults to 0. */
+  offset?: number;
+}
+
+/** Paginated result wrapper for the search use-case. */
+export interface OrderSearchResult {
+  orders: OrderRow[];
+  total: number;
+  limit: number;
+  offset: number;
+  hasMore: boolean;
+}
+
 /** Summary metrics for the merchant dashboard. */
 export interface MetricsSummary {
   total_orders: number;

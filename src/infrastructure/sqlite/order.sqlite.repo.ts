@@ -15,6 +15,8 @@ import type {
   OrderRow,
   CreateOrderInput,
   OrderFilters,
+  OrderSearchFilters,
+  OrderSearchResult,
   MetricsSummary,
   TopCustomerRow,
 } from '../../domain/order/order.types.js';
@@ -111,5 +113,81 @@ export const orderSqliteRepo: IOrderRepository = {
          LIMIT ?`,
       )
       .all(merchantId, limit) as TopCustomerRow[];
+  },
+
+  /**
+   * Search orders for a merchant using rich filter criteria.
+   *
+   * Builds the WHERE clause dynamically from whichever filters are present so
+   * that only the relevant conditions are applied — no silent "match-all" defaults
+   * can sneak in from an omitted field.  A separate COUNT query runs first so the
+   * caller always knows the total matching set size for pagination without a
+   * second round-trip from the client.
+   *
+   * Performance note: `merchant_id` is always the leading predicate, matching
+   * the existing index.  For large datasets the additional columns (email, type,
+   * status, created_at) should be covered by a composite index:
+   *   CREATE INDEX IF NOT EXISTS idx_orders_search
+   *     ON orders (merchant_id, type, status, created_at, customer_email);
+   */
+  searchOrders(merchantId: string, filters: OrderSearchFilters): OrderSearchResult {
+    const limit  = filters.limit  ?? 50;
+    const offset = filters.offset ?? 0;
+
+    // Build the shared WHERE clause + bound parameters incrementally.
+    const conditions: string[] = ['merchant_id = ?'];
+    const params: unknown[]    = [merchantId];
+
+    if (filters.email !== undefined) {
+      conditions.push('LOWER(customer_email) = LOWER(?)');
+      params.push(filters.email);
+    }
+    if (filters.status !== undefined) {
+      conditions.push('status = ?');
+      params.push(filters.status);
+    }
+    if (filters.type !== undefined) {
+      conditions.push('type = ?');
+      params.push(filters.type);
+    }
+    if (filters.from !== undefined) {
+      conditions.push('created_at >= ?');
+      params.push(filters.from);
+    }
+    if (filters.to !== undefined) {
+      conditions.push('created_at < ?');
+      params.push(filters.to);
+    }
+    if (filters.minAmount !== undefined) {
+      conditions.push('total_amount >= ?');
+      params.push(filters.minAmount);
+    }
+    if (filters.maxAmount !== undefined) {
+      conditions.push('total_amount <= ?');
+      params.push(filters.maxAmount);
+    }
+
+    const where = conditions.join(' AND ');
+
+    const { total } = db
+      .prepare(`SELECT COUNT(*) AS total FROM orders WHERE ${where}`)
+      .get(...(params as [unknown])) as { total: number };
+
+    const orders = db
+      .prepare(
+        `SELECT * FROM orders
+         WHERE ${where}
+         ORDER BY created_at DESC
+         LIMIT ? OFFSET ?`,
+      )
+      .all(...(params as [unknown]), limit, offset) as OrderRow[];
+
+    return {
+      orders,
+      total,
+      limit,
+      offset,
+      hasMore: offset + orders.length < total,
+    };
   },
 };

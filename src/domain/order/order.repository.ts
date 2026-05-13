@@ -12,6 +12,8 @@ import type {
   OrderRow,
   CreateOrderInput,
   OrderFilters,
+  OrderSearchFilters,
+  OrderSearchResult,
   MetricsSummary,
   TopCustomerRow,
 } from './order.types.js';
@@ -50,4 +52,11 @@ export interface IOrderRepository {
    * Return top customers ranked by total amount spent (descending).
    */
   getTopCustomers(merchantId: string, limit: number): TopCustomerRow[];
+
+  /**
+   * Search orders for a merchant using rich filter criteria.
+   * Returns a paginated result that includes a total count for building
+   * pagination UI without a separate count request.
+   */
+  searchOrders(merchantId: string, filters: OrderSearchFilters): OrderSearchResult;
 }
