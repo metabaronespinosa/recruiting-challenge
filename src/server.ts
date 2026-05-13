@@ -4,10 +4,9 @@ import { authMiddleware } from './auth.js';
 import { ordersRouter } from './routes/orders.js';
 import { revenueRouter } from './routes/revenue.js';
 import { metricsRouter } from './routes/metrics.js';
-import { seedIfEmpty } from './scripts/seed.js';
 
+// Only initialise the schema on boot; seeding is handled by `npm run seed`.
 initSchema();
-seedIfEmpty();
 
 const app = express();
 const PORT = Number(process.env.PORT ?? 3000);
