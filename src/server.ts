@@ -26,8 +26,8 @@ app.get('/api/health', (_req, res) => {
   res.json({ ok: true });
 });
 
-app.use('/api/orders', authMiddleware, createOrdersRouter(orderService));
 app.use('/api/orders/search', authMiddleware, createSearchRouter(orderService));
+app.use('/api/orders', authMiddleware, createOrdersRouter(orderService));
 app.use('/api/revenue', authMiddleware, createRevenueRouter(orderService));
 app.use('/api/metrics', authMiddleware, createMetricsRouter(orderService));
 
