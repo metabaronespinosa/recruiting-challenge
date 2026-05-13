@@ -26,7 +26,7 @@ metricsRouter.get('/summary', (req, res) => {
 
   const avgOrderRow = metricsDb
     .prepare(
-      `SELECT COALESCE(AVG(total_amount), 0) AS avg FROM orders WHERE merchant_id = ?`,
+      `SELECT COALESCE(AVG(total_amount), 0) AS avg FROM orders WHERE merchant_id = ? AND type = 'sale'`,
     )
     .get(merchantId) as { avg: number };
 

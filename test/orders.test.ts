@@ -38,6 +38,32 @@ test('orders DAL: getById returns the order for the correct merchant', () => {
   assert.equal(got?.total_amount, 1200);
 });
 
+test('C-3: sumAmountByMerchant excludes refund rows from revenue', () => {
+  initSchema();
+  db.prepare(`INSERT OR IGNORE INTO merchants (id, name) VALUES ('m_revenue', 'Revenue Test')`).run();
+
+  const from = '2024-01-01T00:00:00.000Z';
+  const to   = '2024-12-31T23:59:59.999Z';
+
+  // Insert two sales and one refund
+  db.prepare(
+    `INSERT OR IGNORE INTO orders (id, merchant_id, customer_email, total_amount, type, status, created_at)
+     VALUES (?, 'm_revenue', 'a@b.com', 3000, 'sale',   'completed', '2024-06-01T00:00:00.000Z')`,
+  ).run('rev-s1');
+  db.prepare(
+    `INSERT OR IGNORE INTO orders (id, merchant_id, customer_email, total_amount, type, status, created_at)
+     VALUES (?, 'm_revenue', 'a@b.com', 2000, 'sale',   'completed', '2024-06-02T00:00:00.000Z')`,
+  ).run('rev-s2');
+  db.prepare(
+    `INSERT OR IGNORE INTO orders (id, merchant_id, customer_email, total_amount, type, status, created_at)
+     VALUES (?, 'm_revenue', 'a@b.com', 1000, 'refund', 'completed', '2024-06-03T00:00:00.000Z')`,
+  ).run('rev-r1');
+
+  const total = ordersDal.sumAmountByMerchant('m_revenue', from, to);
+  // Only the two sales should be summed (3000 + 2000 = 5000), refund excluded
+  assert.equal(total, 5000);
+});
+
 test('C-1: getById returns undefined when merchantId does not match (IDOR fix)', () => {
   initSchema();
   db.prepare(`INSERT OR IGNORE INTO merchants (id, name) VALUES ('m_test', 'Test')`).run();
