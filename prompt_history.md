@@ -1,4 +1,4 @@
-# Prompt history — <your name>
+# Prompt history — Luis Fernando Lopez Espinosa
 
 > Raw, unedited. False starts and bad prompts are signal, not embarrassment.
 

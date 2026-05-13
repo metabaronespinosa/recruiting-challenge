@@ -33,7 +33,7 @@
   - What was wrong or weak: `seedIfEmpty()` was called unconditionally in `server.ts`, running a blocking query before the server started. A destructive seed change could wipe production data on restart.
   - Shape of my improvement: Removed the call entirely from `server.ts`; seed is already invokable via `npm run seed`.
   - Alternatives I considered and rejected: Wrapping in a `NODE_ENV !== 'production'` guard — still leaves the call in the boot path; removal is cleaner and safer.
-
+- 
 - **H-3 — Unvalidated query parameters**
   - What was wrong or weak: `limit` was unbounded, date strings were not format-checked, and inverted ranges silently returned zero results.
   - Shape of my improvement: Extracted `isValidDate` (YYYY-MM-DD regex) and `clampLimit` (hard max 500) into `src/routes/query-validation.ts`; applied to orders and revenue routes with explicit 400s for bad input.
@@ -101,3 +101,10 @@
 - Delete the DAL shim and legacy route shims once all direct callers migrate to `orderSqliteRepo` / factory routers.
 - Integrate `check:domain-deps` into a pre-commit hook (Husky) or CI step.
 - Add an in-memory `IOrderRepository` stub for pure unit-testing the service without a SQLite DB.
+- Add rate limiting middleware to all API routes to prevent abuse and ensure fair resource usage.
+- Implement an initial approach of a FE architecture with ReactJS and TypeScript. I would maybe NextJS for the dashboard and admin interfaces.
+- Setup a proper initial architecture for FE including important components.
+  - State management
+  - React Query setup
+  - C4 Model documentation
+  - AI Rules including component design patterns and naming conventions
