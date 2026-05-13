@@ -211,3 +211,43 @@ Executed three sequential commits covering Steps 6–8. Step 6: created `src/dom
 Accepted all changes as-is. The factory-function pattern for both the service and routers was chosen over classes to avoid `this` binding issues and enable clean dependency injection. The check-domain-deps script uses no new libraries, matching the project's no-new-dependencies constraint from the migration plan.
 
 ---
+
+## Session 9 — Add ROADMAP.md to /docs/
+
+**Prompt:**
+```
+Now that everything in AUDIT.md is already implemented successfully and now we have a critical
+issues free, robust and scalable API, I would like to add a ROADMAP.md inside /docs/ with a
+table of max 5 points to describe clear and concisesly what next steps should engineering team
+consider to implement
+CONSIDERATIONS
+- from the list of 5 points, include adding openAPI and terraform to improve external facing
+  docs and CI/CD respectively
+- Include at least 1 point (final one) which some suggestion on how to improve platform as a
+  product/business level
+- list all points in a single table with a brief description and an estimate in commit's on
+  how to bring this roadmap to reality
+```
+
+**What the model returned:**
+Created `docs/ROADMAP.md` with a single five-row markdown table. Row 1: OpenAPI Specification
+& Living Docs — OAS 3.1 `openapi.yaml` as the contract source of truth, `swagger-ui-express`
+on `GET /docs`, and contract tests to prevent drift (4–6 commits). Row 2: Structured Logging,
+Request Tracing & Observability — `pino` logger, `uuid v4` request IDs propagated through
+service and DAL layers, log fields for `merchantId`, `endpoint`, `statusCode`, and `durationMs`
+(3–5 commits). Row 3: Route-Level Integration Test Suite — `supertest` covering happy-path,
+missing-auth, invalid-input, and tenant-isolation assertions per endpoint, targeting ≥ 80%
+branch coverage via `c8`, gated in CI (5–7 commits). Row 4: Terraform Infrastructure &
+CI/CD Pipeline — workspaced `dev/staging/production` environments, GitHub Actions pipeline
+`lint → tsc → test:coverage → terraform plan` on PR and `terraform apply → deploy` on merge
+to `main` (6–9 commits). Row 5: Multi-Tier Merchant Plans, Usage Metering & Billing Webhooks
+— `plan` field on `merchants`, per-plan rate limits, `usage_events` table,
+`GET /api/billing/usage` endpoint, and Stripe webhook handlers for subscription lifecycle
+events (8–12 commits). A footer note explains the commit-count convention and its dependency
+on the DDD migration being already in place.
+
+**What I accepted, rejected, or refined:**
+Accepted as-is. Ordering was intentional: OpenAPI first because the contract benefits every
+subsequent initiative; observability before tests because it aids CI debugging; tests before
+Terraform so the deployment gate is meaningful; billing last because it requires stable infra,
+observability, and a test harness to safely run payment webhooks in production.

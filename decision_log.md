@@ -80,6 +80,11 @@
   - Shape of my improvement: Created `src/scripts/check-domain-deps.ts` — a zero-dependency Node.js script that recursively scans `src/domain/` for forbidden import patterns and exits 1 on any match; wired as `npm run check:domain-deps`; added `test/domain-deps.test.ts` (2 tests) so CI catches violations automatically.
   - Alternatives I considered and rejected: An ESLint `no-restricted-imports` rule — correct long-term but requires adding ESLint as a dependency; the custom script enforces the same rule with no new packages.
 
+- **Session 9 — Engineering ROADMAP.md**
+  - What was wrong or weak: No forward-looking plan existed; the audit and migration were complete but next steps for the engineering team were undocumented.
+  - Shape of my improvement: Created `docs/ROADMAP.md` with a single prioritised five-row table covering: OpenAPI spec & living docs, structured logging & request tracing, route-level integration test suite, Terraform infrastructure & CI/CD pipeline, and multi-tier merchant plans with usage metering and Stripe billing webhooks. Each row includes a commit-range estimate.
+  - Alternatives I considered and rejected: A free-form prose document — rejected in favour of a table so the engineering team can scan priorities and effort at a glance without reading paragraphs.
+
 ## Things I noticed but did NOT fix
 
 - `top-customers` SUM still includes refunds (scope limited to the AVG and revenue SUM identified in C-3).
